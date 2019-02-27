@@ -55,7 +55,7 @@ function startSegmentation(win) {
   let overlayCSS = `position: fixed; display: block; width: ` + w + `px; height: ` + h + `px; top: ` + t + `px; left: ` + l + `px;background-color: rgba(255,69,0,0.5); z-index: 1000000; cursor: pointer; `;
   overlay.style.cssText = overlayCSS;
 
-  checkFlag()
+  //checkFlag()
   return buildJSONData();
 }
 
@@ -101,6 +101,7 @@ function nextNode() {
     }, 2000);
   } else {
     flag = false;
+    contentWindow.writetodisk();
   }
 }
 
