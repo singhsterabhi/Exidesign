@@ -2,25 +2,28 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 
 (async () => {
-  const browser = await puppeteer.launch({
-    devtools: false,
-    headless: false,
-    args: ['--window-size=1920,1080', '--disable-infobars']
-  });
-
-  const page = await browser.newPage();
-  page.setBypassCSP(true);
-  await page.setViewport({
-    width: 1920,
-    height: 1080
-  });
 
   const urls = fs
     .readFileSync("./urls")
     .toString()
     .split("\n");
 
-  for (let i = 0; i < urls.length; i++) {
+  // for (let i = 0; i < urls.length; i++) {
+  let i = 0;
+  let openUrl = async function () {
+    const browser = await puppeteer.launch({
+      devtools: false,
+      headless: false,
+      args: ['--window-size=1920,1080', '--disable-infobars']
+    });
+
+    const page = await browser.newPage();
+    page.setBypassCSP(true);
+    await page.setViewport({
+      width: 1920,
+      height: 1080
+    });
+
     const url = urls[i];
     console.log("Operating on " + url + "\n");
     await page.goto(url, {
@@ -39,7 +42,7 @@ const puppeteer = require("puppeteer");
       path: require.resolve("./nodeseperator.js")
     });
 
-    var writetodisk = function () {
+    var writetodisk = function (data) {
       var directoryPrefix = "data/";
 
       var domain = url.replace(/(^\w+:|^)\/\//, "");
@@ -48,16 +51,21 @@ const puppeteer = require("puppeteer");
       fs.writeFile(nameoffile, data, err => {
         if (err) throw err;
         console.log("File successfully written to disk");
+        i++;
+        browser.close();
+        if (i < urls.length) {
+          openUrl();
+        }
       });
     }
 
     await page.exposeFunction("writetodisk", writetodisk);
 
-    const data = await page.evaluate(() => {
+    await page.evaluate(() => {
       return startSegmentation(window);
     });
 
   }
+  openUrl();
 
-  // await browser.close();
 })();

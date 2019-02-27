@@ -6,14 +6,13 @@ let allNodesLength;
 let currentNode;
 
 function startSegmentation(win) {
-  console.log('hi');
   contentWindow = win;
   contentDocument = contentWindow.document;
   var root = contentDocument.getElementsByTagName("BODY")[0];
   findAllNodes(contentDocument);
   gatherAllTextNodes(contentDocument);
 
-  console.log(allNodes);
+  // console.log(allNodes);
 
   for (let i = 0; i < allNodes.length; i++) {
 
@@ -24,9 +23,9 @@ function startSegmentation(win) {
     for (let [key, value] of Object.entries(allNodes[i])) {
       if (key.substring(0, 2) == "is") {
         let val = (value == 1) ? "checked" : "";
-        modalContent += "<span><p>" + key + "</p>" + "<input type='checkbox' value='" + value + "' id='node_" + key + "' " + val + " >";
+        modalContent += "<span><p>" + key + "</p>" + "<input type='checkbox' value='" + value + "' class='node_" + key + "' " + val + " >";
       } else
-        modalContent += "<span><p>" + key + "</p>" + "<input type='text' value='" + value + "'>";
+        modalContent += "<span><p>" + key + "</p>" + "<input type='text' value='" + value + "'  class='node_" + key + "'>";
     }
     modal.innerHTML = `<div class="modal-header"></div><div class="modal-content">` + modalContent + `</div><div><button onclick='nextNode()' id='nextNode'>Next</button></div>`;
     modal.style.cssText = `border:1px solid #000;display:none;position:absolute;left:25vw; top:50px;border-radius:5px;z-index: 2000000;`;
@@ -45,7 +44,7 @@ function startSegmentation(win) {
 
   currentNode = 0;
   allNodesLength = allNodes.length;
-  console.log(allNodes[currentNode]['id']);
+  // console.log(allNodes[currentNode]['id']);
   document.getElementById(allNodes[currentNode]['id']).style.display = "block";
   let w = allNodes[currentNode]['width'] + 20;
   let h = allNodes[currentNode]['height'] + 20;
@@ -55,24 +54,25 @@ function startSegmentation(win) {
   let overlayCSS = `position: fixed; display: block; width: ` + w + `px; height: ` + h + `px; top: ` + t + `px; left: ` + l + `px;background-color: rgba(255,69,0,0.5); z-index: 1000000; cursor: pointer; `;
   overlay.style.cssText = overlayCSS;
 
-  //checkFlag()
-  return buildJSONData();
-}
-
-function checkFlag() {
-  if (flag == true) {
-    console.log('flag==true')
-    window.setTimeout(checkFlag, 1000); /* this checks the flag every 1000 milliseconds*/
-  } else
-    return;
 }
 
 function nextNode() {
-  // document.getElementById(allNodes[currentNode]['id']).style.display = "none";
+  for (let [key, value] of Object.entries(allNodes[currentNode])) {
+    if (key.substring(0, 2) == "is") {
+      if ($("#" + allNodes[currentNode]["id"] + " .node_" + key).prop('checked') == true)
+        allNodes[currentNode][key] = 1;
+      else
+        allNodes[currentNode][key] = 0;
+    } else
+      allNodes[currentNode][key] = $("#" + allNodes[currentNode]["id"] + " .node_" + key).val();
+  }
+
   $("#" + allNodes[currentNode]['id']).remove();
+
+
   if (currentNode + 1 < allNodesLength) {
     currentNode++;
-    console.log(allNodes[currentNode]['id']);
+    // console.log(allNodes[currentNode]['id']);
     let currentModal = document.getElementById(allNodes[currentNode]['id'])
     currentModal.style.cssText = `border:1px solid #000;display:block;position:absolute;left:25vw; top:50px;border-radius:5px;z-index: 2000000;`;
 
@@ -89,8 +89,8 @@ function nextNode() {
     overlay.style.cssText = overlayCSS;
 
     // window.scrollTo(allNodes[currentNode]['left']+allNodes[currentNode]['width'], allNodes[currentNode]['top']+allNodes[currentNode]['height']);
-    console.log(l + w)
-    console.log(h + t)
+    // console.log(l + w)
+    // console.log(h + t)
     // document.scrollLeft = l + w;
     // document.scrollTop = h + t;
     $(document.body).animate({
@@ -101,7 +101,8 @@ function nextNode() {
     }, 2000);
   } else {
     flag = false;
-    contentWindow.writetodisk();
+    let final = buildJSONData();
+    contentWindow.writetodisk(final);
   }
 }
 
