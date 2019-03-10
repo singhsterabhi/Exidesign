@@ -97,4 +97,8 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+# Folders
+data/
+mappings/
+
 # End of https://www.gitignore.io/api/node,compressed

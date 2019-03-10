@@ -4,23 +4,36 @@ var textNodes = [];
 let flag = true;
 let allNodesLength;
 let currentNode;
+let contentWindow;
 
 function startSegmentation(win) {
   contentWindow = win;
   contentDocument = contentWindow.document;
   var root = contentDocument.getElementsByTagName("BODY")[0];
+  // win.scrollTo(0,2000)
   findAllNodes(contentDocument);
   gatherAllTextNodes(contentDocument);
 
   // console.log(allNodes);
 
-  for (let i = 0; i < allNodes.length; i++) {
+  let menu = document.createElement("DIV");
+  menu.setAttribute('id', 'cntnr');
+  menu.innerHTML = `<ul id='items'>
+                    </ul>`;
+  document.body.appendChild(menu);
 
+  let box = document.createElement("DIV");
+  box.setAttribute('id', 'shadowBox');
+  document.body.appendChild(box);
+
+  for (let i = 0; i < allNodes.length; i++) {
     let modal = document.createElement("DIV");
     modal.setAttribute("id", allNodes[i]['id']);
-    modal.setAttribute("class", "myModal");
+    modal.setAttribute("class", "myAttonatorModal");
     let modalContent = "";
+    createBorder(allNodes[i]['xpath'], allNodes[i]['id'])
     for (let [key, value] of Object.entries(allNodes[i])) {
+
       if (key.substring(0, 2) == "is") {
         let val = (value == 1) ? "checked" : "";
         modalContent += "<span><p>" + key + "</p>" + "<input type='checkbox' value='" + value + "' class='node_" + key + "' " + val + " >";
@@ -35,28 +48,120 @@ function startSegmentation(win) {
     document.getElementsByClassName('modal-header')[0].style.cssText = `height:30px;background-color:#444;color:#ddd;cursor:pointer;`;
   }
 
+  // let overlay = document.createElement("DIV");
+  // overlay.setAttribute("id", "overlay");
+  // document.body.appendChild(overlay);
 
-  let overlay = document.createElement("DIV");
-  overlay.setAttribute("id", "overlay");
-  document.body.appendChild(overlay);
-
-  $(".myModal").draggable();
+  $(".myAttonatorModal").draggable();
 
   currentNode = 0;
   allNodesLength = allNodes.length;
   // console.log(allNodes[currentNode]['id']);
   document.getElementById(allNodes[currentNode]['id']).style.display = "block";
-  let w = allNodes[currentNode]['width'] + 20;
-  let h = allNodes[currentNode]['height'] + 20;
-  let t = allNodes[currentNode]['top'] - 10;
-  let l = allNodes[currentNode]['left'] - 10;
+  let w = allNodes[currentNode]['width']
+  let h = allNodes[currentNode]['height']
+  let t = allNodes[currentNode]['top']
+  let l = allNodes[currentNode]['left']
 
-  let overlayCSS = `position: fixed; display: block; width: ` + w + `px; height: ` + h + `px; top: ` + t + `px; left: ` + l + `px;background-color: rgba(255,69,0,0.5); z-index: 1000000; cursor: pointer; `;
-  overlay.style.cssText = overlayCSS;
+  // let overlayCSS = `position: fixed; display: block; width: ` + w + `px; height: ` + h + `px; top: ` + t + `px; left: ` + l + `px;background-color: rgba(255,69,0,0.5); z-index: 1000000; cursor: pointer; `;
+  // overlay.style.cssText = overlayCSS;
+  let obj = document.evaluate(allNodes[currentNode]['xpath'], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  if (obj != undefined) {
+    obj.style.cssText += `border:4px solid orange;`;
+  }
+  contentWindow.scrollTo(l + w, h + t-200)
+  let styleElem = document.createElement('style');
+  styleElem.type = 'text/css';
+  styleElem.innerHTML = `#items{
+    list-style:none;
+    margin:0px;
+    margin-top:4px;
+    padding-left:10px;
+    padding-right:10px;
+    padding-bottom:3px;
+    font-size:17px;
+    color: #333333;
+  }
+  #cntnr{
+    display:none;
+    position:fixed;
+    border:1px solid #B2B2B2;
+    width:300px;      background:#F9F9F9;
+    box-shadow: 3px 3px 2px #E9E9E9;
+    border-radius:4px;
+    z-index:10000000;
+  }
+  #cntnr li{
+    font-size:12px;
+    padding: 3px;
+    padding-left:10px;
+  }
+  #items :hover{
+     color: white;
+    background:#284570;
+    border-radius:2px;
+  }
+  #shadowBox{
+    display:block;
+    position:fixed;
+    top:-100px;
+    left:-100px;
+    z-index:10000000;
+    opacity:0;
+  }`;
+  document.getElementsByTagName('head')[0].appendChild(styleElem);
 
 }
 
+$(document).bind("contextmenu", function (e) {
+  e.preventDefault();
+  // $("#values").text(e.target.getAttribute('id'));
+  console.log(e.pageX + "," + e.pageY);
+  $('#items').html('<li id="xyz" onclick="copyId()">' + e.target.getAttribute('tooltip') + '</li>')
+  $('#shadowBox').html(e.target.getAttribute('tooltip'))
+  $("#cntnr").css("left", e.pageX);
+  $("#cntnr").css("top", e.pageY);
+  // $("#cntnr").hide(100);        
+  $("#cntnr").fadeIn(200, startFocusOut());
+});
+
+function copyId() {
+  let doc = document,
+    text = doc.getElementById("shadowBox"),
+    range, selection;
+  if (doc.body.createTextRange) {
+    range = document.body.createTextRange();
+    range.moveToElementText(text);
+    range.select();
+    document.execCommand("copy");
+  } else if (contentWindow.getSelection) {
+    selection = contentWindow.getSelection();
+    range = document.createRange();
+    range.selectNodeContents(text);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.execCommand("copy");
+  }
+  console.log("Copied the text: " + range.value);
+}
+
+function startFocusOut() {
+  $(document).on("click", function () {
+    $("#cntnr").hide();
+    $(document).off("click");
+  });
+}
+
+
 function nextNode() {
+  // let elem=document.evaluate(allNodes[currentNode]['xpath'], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  // console.log(elem);
+  // // elem.style.cssText+=`border`
+  // createBorder(elem,allNodes[currentNode]['id'])
+  let obj = document.evaluate(allNodes[currentNode]['xpath'], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  if (obj != undefined) {
+    obj.style.cssText += `border:1px solid black;`;
+  }
   for (let [key, value] of Object.entries(allNodes[currentNode])) {
     if (key.substring(0, 2) == "is") {
       if ($("#" + allNodes[currentNode]["id"] + " .node_" + key).prop('checked') == true)
@@ -73,37 +178,43 @@ function nextNode() {
   if (currentNode + 1 < allNodesLength) {
     currentNode++;
     // console.log(allNodes[currentNode]['id']);
+
+    let w = allNodes[currentNode]['width']
+    let h = allNodes[currentNode]['height']
+    let t = allNodes[currentNode]['top']
+    let l = allNodes[currentNode]['left']
+    console.log(t);
     let currentModal = document.getElementById(allNodes[currentNode]['id'])
-    currentModal.style.cssText = `border:1px solid #000;display:block;position:absolute;left:25vw; top:50px;border-radius:5px;z-index: 2000000;`;
+    currentModal.style.cssText = `border:1px solid #000;display:block;position:absolute;left:25vw; top:${t+h}px;border-radius:5px;z-index: 2000000;`;
 
     document.getElementsByClassName('modal-content')[0].style.cssText = `background-color: #fefefe;padding: 20px;max-height:200px;overflow-y:auto;border: 1px solid #888;`;
     document.getElementById('nextNode').style.cssText = `font-weight: bold;font-size: 15px;width: 100%;cursor: pointer;background: #444444;border: 0;height: 30px;color: white;`;
     document.getElementsByClassName('modal-header')[0].style.cssText = `height:30px;background-color:#444;color:#ddd;cursor:pointer;`;
-    let overlay = document.getElementById('overlay');
-    let w = allNodes[currentNode]['width'] + 20;
-    let h = allNodes[currentNode]['height'] + 20;
-    let t = allNodes[currentNode]['top'] - 10;
-    let l = allNodes[currentNode]['left'] - 10;
-
-    let overlayCSS = `position: fixed; display: block; width: ` + w + `px; height: ` + h + `px; top: ` + t + `px; left: ` + l + `px;background-color: rgba(255,69,0,0.5); z-index: 1000000; cursor: pointer; `;
-    overlay.style.cssText = overlayCSS;
-
-    // window.scrollTo(allNodes[currentNode]['left']+allNodes[currentNode]['width'], allNodes[currentNode]['top']+allNodes[currentNode]['height']);
-    // console.log(l + w)
-    // console.log(h + t)
-    // document.scrollLeft = l + w;
-    // document.scrollTop = h + t;
-    $(document.body).animate({
-      'scrollTop': h + t
-    }, 2000);
-    $(document.body).animate({
-      'scrollLeft': l + w
-    }, 2000);
+    // let overlay = document.getElementById('overlay');
+    
+    let obj = document.evaluate(allNodes[currentNode]['xpath'], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    if (obj != undefined) {
+      obj.style.cssText += `border:4px solid orange;`;
+    }
+    contentWindow.scrollTo(l + w, h + t-200);
   } else {
     flag = false;
     let final = buildJSONData();
     contentWindow.writetodisk(final);
   }
+}
+
+
+function createBorder(xpath, id) {
+  let obj = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  console.log(obj);
+  if (obj != undefined) {
+    obj.style.cssText += `border:1px solid black;`
+    let attr = document.createAttribute('tooltip');
+    attr.value = id;
+    obj.setAttributeNode(attr);
+  }
+  console.log(id);
 }
 
 function findAllNodes(obj) {
@@ -228,7 +339,7 @@ function gatherAllTextNodes(obj) {
       if (top < 0 || left < 0) {
         continue;
       }
-
+      // createBorder(xpath, id);
       var textNode = {
         id: id,
         isSPAN: getTagEncodedValue(tagType.toLowerCase(), "span"),
@@ -327,7 +438,7 @@ function getImgNode(obj) {
   }
 
   var alpha = 1;
-
+  // createBorder(xpath, id)
   var imgNode = {
     id: id,
     isSPAN: 0,
@@ -427,7 +538,7 @@ function getLinkNode(obj) {
   if (top < 0 || left < 0) {
     return null;
   }
-
+  // createBorder(xpath, id)
   var linkNode = {
     id: id,
     isSPAN: 0,
@@ -527,7 +638,7 @@ function getInputNode(obj) {
   if (top < 0 || left < 0) {
     return null;
   }
-
+  // createBorder(xpath, id)
   var inputNode = {
     id: id,
     isSPAN: 0,
