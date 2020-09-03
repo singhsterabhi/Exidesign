@@ -9,7 +9,7 @@
   "author": "singhsterabhi",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^1.12.2"
+    "puppeteer": "^1.13.0"
   },
   "devDependencies": {
     "electron": "^4.0.8"
