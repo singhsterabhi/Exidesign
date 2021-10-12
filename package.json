@@ -12,6 +12,6 @@
     "puppeteer": "^1.12.2"
   },
   "devDependencies": {
-    "electron": "^4.0.8"
+    "electron": "^11.5.0"
   }
 }
